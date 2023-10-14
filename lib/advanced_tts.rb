@@ -12,19 +12,19 @@ class AdvancedTTS
     def text_to_mp3(original_text, filename: "output.mp3", prompt: "")
         if original_text
             text = !prompt.empty? ? original_text : call_chatgpt(original_text, prompt)
-            call_polly(text, voice_id: "Joanna", filename: filename)
+            call_polly_and_write_to_file(text, voice_id: "Joanna", filename: filename)
         end
     end
 
     private
 
-    # use the amazon sdk to call out the amazon given the text
+    # if given a prompt, call out to chatgpt to modify the text
     def call_chatgpt(text, prompt)
         text
     end
     
-    # if given a prompt, call out to chatgpt to modify the text
-    def call_polly(text, voice_id: "Joanna", filename: "output.mp3")
+    # use the amazon sdk to call out the amazon given the text
+    def call_polly_and_write_to_file(text, voice_id: "Joanna", filename: "output.mp3")
         polly = Aws::Polly::Client.new
 
         resp = polly.synthesize_speech({

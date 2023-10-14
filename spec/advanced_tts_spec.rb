@@ -29,13 +29,23 @@ describe "AdvancedTTS" do
             expect(synthesize_response).to receive(:audio_stream)
 
             # Mock file writes
-            expect(IO).to receive(:copy_stream)
+            expect(IO).to receive(:copy_stream).with(anything, "output.mp3")
 
             expect(tts.text_to_mp3("hello")).to eq("hello") 
         end
 
         it "allows configuration of the filename" do
-            skip
+            # an API call is made to amazon polly which returns a synthesize response
+            expect(polly_client).to receive(:synthesize_speech).and_return(synthesize_response)
+            expect(Aws::Polly::Client).to receive(:new).and_return(polly_client)
+            
+            # we then pull the audio stream from the api response
+            expect(synthesize_response).to receive(:audio_stream)
+
+            # Mock file write to a different file
+            expect(IO).to receive(:copy_stream).with(anything, "newfile.mp3")
+
+            expect(tts.text_to_mp3("hello", filename: "newfile.mp3")).to eq("hello")
         end
 
         it "conditionally uses chatgpt if given a prompt" do
