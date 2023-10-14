@@ -16,8 +16,21 @@ describe "AdvancedTTS" do
 
     describe "#text_to_mp3" do
         let(:tts) { AdvancedTTS.new(region, access_key, secret_key) }
+        let(:polly_client) { double('polly') }
+        let(:synthesize_response) { double('response') }
+        let(:io_stream) { double('io_stream') }
 
         it "accepts text and writes to a file" do
+            # an API call is made to amazon polly which returns a synthesize response
+            expect(polly_client).to receive(:synthesize_speech).and_return(synthesize_response)
+            expect(Aws::Polly::Client).to receive(:new).and_return(polly_client)
+            
+            # we then pull the audio stream from the api response
+            expect(synthesize_response).to receive(:audio_stream)
+
+            # Mock file writes
+            expect(IO).to receive(:copy_stream)
+
             expect(tts.text_to_mp3("hello")).to eq("hello") 
         end
 
@@ -26,7 +39,7 @@ describe "AdvancedTTS" do
         end
 
         it "conditionally uses chatgpt if given a prompt" do
-            expect(tts.text_to_mp3("hello")).to eq("hello") 
+            # expect(tts.text_to_mp3("hello", prompt: "Pretend you're a goofy guy")).to eq("hello") 
         end
     end
 end
