@@ -2,17 +2,22 @@
 
 require 'aws-sdk-polly'
 
+puts "hello world from advanced_tts"
+
 class AdvancedTTS
-    def initialize(region, access_key, secret_key)
-        @region = region
-        @access_key = access_key
-        @secret_key = secret_key
+    # TODO: Rework the args
+    def initialize#(region, access_key, secret_key)
+        # @region = region
+        # @access_key = access_key
+        # @secret_key = secret_key
     end
 
     def text_to_mp3(original_text, filename: "output.mp3", prompt: "")
+        puts "hello from text_to_mp3: #{original_text}"
         if original_text
-            text = !prompt.empty? ? original_text : call_chatgpt(original_text, prompt)
-            call_polly_and_write_to_file(text, voice_id: "Joanna", filename: filename)
+            trimmed_text = original_text.gsub("!say", "")
+            text = !prompt.empty? ? trimmed_text : call_chatgpt(trimmed_text, prompt)
+            call_polly_and_write_to_file(text, filename: filename)
         end
     end
 
@@ -24,14 +29,21 @@ class AdvancedTTS
     end
     
     # use the amazon sdk to call out the amazon given the text
-    def call_polly_and_write_to_file(text, voice_id: "Joanna", filename: "output.mp3")
+    def call_polly_and_write_to_file(text, voice_id: "Russell", filename: "output.mp3")
+        puts "hello from call_polly_and_write_to_file"
+        
         polly = Aws::Polly::Client.new
+
+        puts "Making an API call with this text: #{text}"
 
         resp = polly.synthesize_speech({
           output_format: "mp3",
-          text: text,
+          text: "<speak>#{text}</speak>",
           voice_id: voice_id,
+          text_type: "ssml"
         })
+
+        puts "Response: Status Succeeded? #{resp.successful?} : #{resp.data}"
 
         IO.copy_stream(resp.audio_stream, filename)
 
@@ -39,4 +51,22 @@ class AdvancedTTS
 
         text
     end
+
+    private
+
+    # def text_type(text)
+    #     contains_ssml?(text) ? "ssml" : "text"
+    # end
+
+    # def contains_ssml?(text)
+    #     # Search for SSML tags in the text
+    #     ssml_tags = text.scan(/<[^>]+>/)
+        
+    #     # If SSML tags are found, it's likely SSML content
+    #     ssml_tags.any?
+
+    #     #"text"
+    # end
 end
+
+AdvancedTTS.new.text_to_mp3(ARGV[0], filename: "C:/Recording Setup/Streamer.bot-latest/tts_files/output.mp3")
